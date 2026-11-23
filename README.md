@@ -15,7 +15,7 @@ Reach the shrine at the end of the forest. Cut down the ronin on the way.
 | ↑ / W / Space | Jump (hold for a higher jump) |
 | J / X | Slash |
 
-On phones and tablets, hold the device sideways. On-screen buttons appear: ◀ ▶ to move, RUN to toggle running, JUMP, and SLASH. On Android, the game goes fullscreen when you tap to begin. On iPhone, use Share → Add to Home Screen to play fullscreen.
+On phones and tablets the game plays in landscape. On Android, tap **Play in landscape** and the screen turns by itself; on iPhone, turn the phone sideways. On-screen buttons appear: ◀ ▶ to move, RUN to toggle running, JUMP, and SLASH. On iPhone, use Share → Add to Home Screen to play fullscreen.
 
 ## Run locally
 

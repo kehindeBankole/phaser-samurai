@@ -59,6 +59,19 @@
         0%, 25% { transform: rotate(0deg); }
         60%, 100% { transform: rotate(-90deg); }
       }
+      #rotate-btn {
+        font: bold 18px monospace;
+        color: #0d0f17;
+        background: #ffd166;
+        border: 0;
+        border-radius: 10px;
+        padding: 14px 26px;
+        min-height: 48px;
+        cursor: pointer;
+        transition: transform 120ms ease-out;
+      }
+      #rotate-btn:active { transform: scale(0.96); }
+      #rotate-btn[hidden] { display: none; }
       @media (prefers-reduced-motion: reduce) {
         #rotate .phone { animation: none; transform: rotate(-90deg); }
       }
@@ -70,9 +83,10 @@
   </head>
   <body>
     <div id="app"></div>
-    <div id="rotate" role="alert">
+    <div id="rotate" role="dialog" aria-labelledby="rotate-msg">
       <div class="phone"></div>
-      <div>Turn your phone sideways<br />to play</div>
+      <div id="rotate-msg">Turn your phone sideways<br />to play</div>
+      <button id="rotate-btn" type="button" hidden>Play in landscape</button>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

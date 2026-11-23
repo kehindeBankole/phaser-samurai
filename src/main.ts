@@ -3,6 +3,7 @@ import { Boot } from "./scenes/Boot";
 import { Preloader } from "./scenes/Preloader";
 import { Menu } from "./scenes/Menu";
 import { Game } from "./scenes/Game";
+import { setupRotatePrompt } from "./orientation";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -26,6 +27,7 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const game = new Phaser.Game(config);
+setupRotatePrompt();
 
 // Pause the game while a phone is held upright (the "turn your phone" overlay is showing).
 const portrait = window.matchMedia("(orientation: portrait) and (pointer: coarse)");

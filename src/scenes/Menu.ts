@@ -1,5 +1,6 @@
 import { Scene } from "phaser";
 import { isTouchDevice } from "../objects/TouchControls";
+import { enterLandscape } from "../orientation";
 
 export class Menu extends Scene {
   constructor() {
@@ -39,13 +40,8 @@ export class Menu extends Scene {
     const start = () => this.scene.start("Game");
     this.input.keyboard?.once("keydown-ENTER", start);
     this.input.once("pointerup", () => {
-      // Phones: go fullscreen and lock landscape where the browser allows it (Android Chrome).
-      // iOS Safari has no fullscreen API for pages; the portrait overlay covers that case.
-      if (touch && this.scale.fullscreen.available && !this.scale.isFullscreen) {
-        this.scale.startFullscreen();
-        const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
-        orientation.lock?.("landscape").catch(() => {});
-      }
+      // Phones: go fullscreen and keep the screen in landscape where the browser allows it.
+      if (touch) enterLandscape();
       start();
     });
   }
