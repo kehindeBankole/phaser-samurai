@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { Player } from "../objects/Player";
 import { Enemy } from "../objects/Enemy";
+import { TouchControls, isTouchDevice } from "../objects/TouchControls";
 
 const WORLD_W = 6200;
 const GROUND_Y = 476; // top surface of the ground
@@ -49,6 +50,7 @@ export class Game extends Phaser.Scene {
   private sparks!: Phaser.GameObjects.Particles.ParticleEmitter;
   private score = 0;
   private finished = false;
+  private touch?: TouchControls;
   private checkpointX = 120;
 
   constructor() {
@@ -125,11 +127,13 @@ export class Game extends Phaser.Scene {
     this.cameras.main.fadeIn(300);
 
     this.createHud();
+    this.touch = isTouchDevice(this.game) ? new TouchControls(this, this.player) : undefined;
   }
 
   update(time: number) {
     this.bg.tilePositionX = this.cameras.main.scrollX * 0.35 / this.bg.tileScaleX;
 
+    this.touch?.update();
     this.player.update(time);
     for (const e of this.enemies.getChildren() as Enemy[]) {
       if (this.finished && e.alive) e.setVelocityX(0).play("idle", true);
@@ -245,7 +249,20 @@ export class Game extends Phaser.Scene {
     }).setOrigin(0.5));
     layer.add(this.add.text(width / 2, height / 2, subtitle, { fontFamily: "monospace", fontSize: "18px", color: "#c9c2ad" }).setOrigin(0.5));
     layer.add(this.add.text(width / 2, height / 2 + 40, `SCORE ${this.score}`, { fontFamily: "monospace", fontSize: "24px", color: "#ffd166" }).setOrigin(0.5));
-    layer.add(this.add.text(width / 2, height / 2 + 90, "ENTER: play again    ESC: menu", { fontFamily: "monospace", fontSize: "16px", color: "#c9c2ad" }).setOrigin(0.5));
+    this.touch?.setVisible(false);
+    const button = (x: number, label: string, onTap: () => void) => {
+      const t = this.add.text(x, height / 2 + 100, label, {
+        fontFamily: "monospace", fontSize: "20px", color: "#e8e3d3", backgroundColor: "#00000088",
+        padding: { x: 18, y: 10 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      t.once("pointerup", onTap);
+      layer.add(t);
+    };
+    button(width / 2 - 110, "PLAY AGAIN", () => this.scene.restart());
+    button(width / 2 + 110, "MENU", () => this.scene.start("Menu"));
+    if (!this.touch) {
+      layer.add(this.add.text(width / 2, height / 2 + 150, "ENTER: play again    ESC: menu", { fontFamily: "monospace", fontSize: "14px", color: "#8a8574" }).setOrigin(0.5));
+    }
     this.tweens.add({ targets: layer, alpha: 1, duration: 300 });
 
     const kb = this.input.keyboard!;

@@ -1,0 +1,10 @@
+{
+  "name": "Samurai",
+  "short_name": "Samurai",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0d0f17",
+  "theme_color": "#0d0f17",
+  "icons": [{ "src": "/vite.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

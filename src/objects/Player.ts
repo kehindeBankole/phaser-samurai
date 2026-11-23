@@ -26,6 +26,9 @@ export class Player extends Knight {
   swingId = 0;
   attacking = false;
 
+  /** Held state from the on-screen touch buttons, merged with the keyboard. */
+  touch = { left: false, right: false, run: false, jump: false };
+
   private keys: Keys;
   private lastGrounded = 0;
   private jumpPressedAt = -Infinity;
@@ -52,10 +55,18 @@ export class Player extends Knight {
     };
 
     // Buffer presses from key-down events so even taps shorter than one frame register.
-    for (const key of this.keys.jump) key.on("down", () => (this.jumpPressedAt = scene.time.now));
-    for (const key of this.keys.attack) key.on("down", () => (this.attackQueuedAt = scene.time.now));
+    for (const key of this.keys.jump) key.on("down", () => this.pressJump());
+    for (const key of this.keys.attack) key.on("down", () => this.pressAttack());
 
     this.on(Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + "attack", () => (this.attacking = false));
+  }
+
+  pressJump() {
+    this.jumpPressedAt = this.scene.time.now;
+  }
+
+  pressAttack() {
+    this.attackQueuedAt = this.scene.time.now;
   }
 
   get invulnerable() {
@@ -72,8 +83,9 @@ export class Player extends Knight {
     const stunned = time < this.stunnedUntil;
 
     // Horizontal movement.
-    const dir = (down(this.keys.right) ? 1 : 0) - (down(this.keys.left) ? 1 : 0);
-    const running = down(this.keys.run);
+    const t = this.touch;
+    const dir = (down(this.keys.right) || t.right ? 1 : 0) - (down(this.keys.left) || t.left ? 1 : 0);
+    const running = down(this.keys.run) || t.run;
     if (!stunned) {
       const speed = running ? RUN_SPEED : WALK_SPEED;
       // Slow down while swinging on the ground so attacks feel weighty.
@@ -90,7 +102,7 @@ export class Player extends Knight {
       this.jumpPressedAt = -Infinity;
     }
     // Variable jump height: releasing early cuts the jump.
-    if (!down(this.keys.jump) && this.body.velocity.y < -200) {
+    if (!down(this.keys.jump) && !t.jump && this.body.velocity.y < -200) {
       this.setVelocityY(this.body.velocity.y * 0.6);
     }
 
