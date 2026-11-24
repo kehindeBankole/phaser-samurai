@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import type { Player } from "./Player";
+import { haptics } from "../fx/haptics";
 
 type ButtonId = "left" | "right" | "jump" | "slash" | "run";
 
@@ -43,6 +44,8 @@ export class TouchControls {
     scene.input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => {
       if (!this.enabled) return;
       const hit = this.hit(p.x, p.y);
+      // Runs inside the tap itself, which is the only time iPhones allow a haptic tick.
+      if (hit === "jump" || hit === "slash" || hit === "run") haptics.tap();
       if (hit === "jump") player.pressJump();
       if (hit === "slash") player.pressAttack();
       if (hit === "run") {

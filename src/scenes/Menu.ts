@@ -1,6 +1,8 @@
-import { Scene } from "phaser";
+import Phaser, { Scene } from "phaser";
 import { isTouchDevice } from "../objects/TouchControls";
 import { enterLandscape } from "../orientation";
+import { addSettingsToggles } from "../objects/SettingsToggles";
+import { sfx } from "../fx/sfx";
 
 export class Menu extends Scene {
   constructor() {
@@ -37,9 +39,18 @@ export class Menu extends Scene {
     }).setOrigin(0.5);
     this.tweens.add({ targets: prompt, alpha: 0.2, duration: 700, yoyo: true, repeat: -1 });
 
-    const start = () => this.scene.start("Game");
+    addSettingsToggles(this, width - 16, 16);
+
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      sfx.click();
+      this.scene.start("Game");
+    };
     this.input.keyboard?.once("keydown-ENTER", start);
-    this.input.once("pointerup", () => {
+    this.input.on("pointerup", (_p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => {
+      if (over.length > 0) return; // tapped a SOUND / VIBRATE switch, not "begin"
       // Phones: go fullscreen and keep the screen in landscape where the browser allows it.
       if (touch) enterLandscape();
       start();

@@ -4,6 +4,7 @@ import { Preloader } from "./scenes/Preloader";
 import { Menu } from "./scenes/Menu";
 import { Game } from "./scenes/Game";
 import { setupRotatePrompt } from "./orientation";
+import { initSfx } from "./fx/sfx";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -33,7 +34,10 @@ setupRotatePrompt();
 const portrait = window.matchMedia("(orientation: portrait) and (pointer: coarse)");
 const syncOrientation = () => (portrait.matches ? game.pause() : game.resume());
 portrait.addEventListener("change", syncOrientation);
-game.events.once(Phaser.Core.Events.READY, syncOrientation);
+game.events.once(Phaser.Core.Events.READY, () => {
+  initSfx(game);
+  syncOrientation();
+});
 
 // Handy for poking at the game from the browser console during development.
 if (import.meta.env.DEV) (window as unknown as { game: Phaser.Game }).game = game;

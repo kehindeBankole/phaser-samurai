@@ -2,6 +2,9 @@ import Phaser from "phaser";
 import { Player } from "../objects/Player";
 import { Enemy } from "../objects/Enemy";
 import { TouchControls, isTouchDevice } from "../objects/TouchControls";
+import { addSettingsToggles } from "../objects/SettingsToggles";
+import { sfx } from "../fx/sfx";
+import { haptics } from "../fx/haptics";
 
 const WORLD_W = 6200;
 const GROUND_Y = 476; // top surface of the ground
@@ -161,15 +164,26 @@ export class Game extends Phaser.Scene {
       const zone = player.swordZone();
       this.drawSlash(zone, player.facing);
       let hit = false;
+      let killed = false;
       for (const e of this.enemies.getChildren() as Enemy[]) {
         if (!e.alive) continue;
         if (Phaser.Geom.Intersects.RectangleToRectangle(zone, e.bodyRect()) && e.takeHit(player.cx, player.swingId)) {
           hit = true;
           this.sparks.explode(12, e.cx, e.body.center.y);
-          if (!e.alive) this.addScore(100);
+          if (!e.alive) {
+            killed = true;
+            this.addScore(100);
+          }
         }
       }
       if (hit) {
+        if (killed) {
+          sfx.kill();
+          haptics.kill();
+        } else {
+          sfx.hit();
+          haptics.hit();
+        }
         this.cameras.main.shake(80, 0.006);
         // Brief hit-stop sells the impact.
         this.physics.world.pause();
@@ -193,12 +207,16 @@ export class Game extends Phaser.Scene {
     star.disableBody(true, true);
     this.addScore(10);
     this.sparks.explode(6, star.x, star.y);
+    sfx.star();
+    haptics.star();
     // Every 10 stars restores a heart.
     const collected = STARS.length - this.stars.countActive();
     if (collected % 10 === 0) this.player.heal();
   }
 
   private fallIntoPit() {
+    sfx.pit();
+    haptics.pit();
     this.player.hurt(this.player.cx, 1);
     if (this.player.hp <= 0) return;
     this.player.setPosition(this.checkpointX, GROUND_Y - 80).setVelocity(0, 0);
@@ -216,6 +234,7 @@ export class Game extends Phaser.Scene {
     this.scoreText = this.add.text(this.scale.width - 20, 16, "", {
       fontFamily: "monospace", fontSize: "20px", color: "#e8e3d3", stroke: "#000", strokeThickness: 4,
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100);
+    addSettingsToggles(this, this.scale.width - 20, 48);
   }
 
   private updateHud() {
@@ -232,11 +251,15 @@ export class Game extends Phaser.Scene {
     this.player.body.setVelocityX(0);
     this.player.body.moves = false;
     this.player.play("idle");
+    sfx.win();
+    haptics.win();
     this.showEndScreen("SHRINE REACHED", bonus ? "Every ronin defeated  +1000" : `${left} ronin still roam`);
   }
 
   private lose() {
     this.finished = true;
+    sfx.lose();
+    haptics.lose();
     this.time.delayedCall(700, () => this.showEndScreen("YOU HAVE FALLEN", "The forest claims another"));
   }
 
@@ -255,7 +278,10 @@ export class Game extends Phaser.Scene {
         fontFamily: "monospace", fontSize: "20px", color: "#e8e3d3", backgroundColor: "#00000088",
         padding: { x: 18, y: 10 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-      t.once("pointerup", onTap);
+      t.once("pointerup", () => {
+        sfx.click();
+        onTap();
+      });
       layer.add(t);
     };
     button(width / 2 - 110, "PLAY AGAIN", () => this.scene.restart());

@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import { Knight } from "./Knight";
 import { flash } from "./flash";
+import { sfx } from "../fx/sfx";
+import { haptics } from "../fx/haptics";
 
 const WALK_SPEED = 170;
 const RUN_SPEED = 280;
@@ -36,6 +38,8 @@ export class Player extends Knight {
   private attackQueuedAt = -Infinity;
   private invulnUntil = 0;
   private stunnedUntil = 0;
+  private wasOnGround = false;
+  private prevVy = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y);
@@ -79,6 +83,13 @@ export class Player extends Knight {
 
     const onGround = this.body.blocked.down;
     if (onGround) this.lastGrounded = time;
+    // Thud on landing from a real fall (not when stepping off a tiny ledge).
+    if (onGround && !this.wasOnGround && this.prevVy > 350) {
+      sfx.land();
+      haptics.land();
+    }
+    this.wasOnGround = onGround;
+    this.prevVy = this.body.velocity.y;
 
     const stunned = time < this.stunnedUntil;
 
@@ -100,6 +111,7 @@ export class Player extends Knight {
       this.setVelocityY(JUMP_VELOCITY);
       this.lastGrounded = -Infinity;
       this.jumpPressedAt = -Infinity;
+      sfx.jump();
     }
     // Variable jump height: releasing early cuts the jump.
     if (!down(this.keys.jump) && !t.jump && this.body.velocity.y < -200) {
@@ -113,6 +125,7 @@ export class Player extends Knight {
       this.attacking = true;
       this.swingId++;
       this.play("attack", true);
+      sfx.swing();
       this.scene.events.emit("player-swing", this);
     }
 
@@ -137,6 +150,8 @@ export class Player extends Knight {
     const away = this.cx < fromX ? -1 : 1;
     this.setVelocity(away * 260, -320);
     flash(this, 0xffffff, 0xff4444, 120);
+    sfx.hurt();
+    haptics.hurt();
     this.scene.tweens.add({ targets: this, alpha: 0.35, duration: 90, yoyo: true, repeat: 4, onComplete: () => this.setAlpha(1) });
     if (this.hp === 0) this.die();
     return true;
@@ -144,6 +159,8 @@ export class Player extends Knight {
 
   heal(amount = 1) {
     this.hp = Math.min(this.maxHp, this.hp + amount);
+    sfx.heal();
+    haptics.heal();
   }
 
   die() {

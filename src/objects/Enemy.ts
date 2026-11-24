@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { Knight } from "./Knight";
 import { flash } from "./flash";
 import type { Player } from "./Player";
+import { sfx } from "../fx/sfx";
 
 const TINT = 0xff8a7a;
 const PATROL_SPEED = 60;
@@ -59,6 +60,7 @@ export class Enemy extends Knight {
           this.stateUntil = time + 260;
           this.play("attack", true);
           this.setVelocityX(this.facing * 160); // lunge
+          sfx.enemyStrike(this.loudness(player));
         }
         return;
 
@@ -88,6 +90,7 @@ export class Enemy extends Knight {
         this.setVelocityX(0);
         this.play("idle", true);
         flash(this, TINT, 0xffffff, 120);
+        sfx.enemyWindup(this.loudness(player));
         this.scene.time.delayedCall(200, () => this.alive && this.state === "windup" && flash(this, TINT, 0xffffff, 120));
         return;
       }
@@ -108,6 +111,11 @@ export class Enemy extends Knight {
     }
 
     this.play(Math.abs(this.body.velocity.x) > 1 ? "walk" : "idle", true);
+  }
+
+  /** Quieter the further the ronin is from the player, silent once off screen. */
+  private loudness(player: Player) {
+    return Phaser.Math.Clamp(1 - Math.abs(player.cx - this.cx) / 500, 0, 1);
   }
 
   /** True when there is no ground just ahead of the enemy's feet. */
